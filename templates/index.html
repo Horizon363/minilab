@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Centrífuga Automatizada – Control y Estado</title>
+
+    <!-- Fuente limpia y ligera -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- (Mantengo tu /static/style.css por si tienes reglas propias) -->
+    <link rel="stylesheet" href="/static/style.css">
+
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <style>
+        /* ----------  PALETA Y RESET BÁSICO  -------------------- */
+        :root {
+            --clr-primary: #006d77;
+            --clr-primary-dark: #004e56;
+            --clr-bg: #fafffd;
+            --clr-panel: #ffffff;
+            --clr-border: #d9e6f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--clr-bg);
+            color: #243242;
+            line-height: 1.45;
+        }
+
+        /* ----------  CONTENEDOR PRINCIPAL  --------------------- */
+        #container {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 34px;
+            border-radius: 14px;
+            background: var(--clr-panel);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .07);
+        }
+
+        @media(max-width:768px) {
+            #container {
+                padding: 24px 18px;
+            }
+        }
+
+        h2 {
+            text-align: center;
+            font-weight: 600;
+            color: var(--clr-primary);
+            margin-bottom: 26px;
+        }
+
+        /* ----------  LAYOUT FLEX  ------------------------------ */
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+
+        #video,
+        #config {
+            flex: 1 1 360px;
+        }
+
+        /* ----------  BLOQUE VIDEO  ----------------------------- */
+        #video img {
+            width: 100%;
+            height: auto;
+            border: 5px solid var(--clr-primary);
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        #video .caption {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* ----------  FORMULARIO  ------------------------------- */
+        form label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #354b5e;
+        }
+
+        input[type=number] {
+            width: 100%;
+            font-size: 15px;
+            padding: 10px 12px;
+            border: 1px solid var(--clr-border);
+            border-radius: 6px;
+            margin-bottom: 18px;
+        }
+
+        /* Grid para los 6 checkboxes de tubo */
+        #tubo-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+            gap: 8px 10px;
+            margin-bottom: 18px;
+        }
+
+        #tubo-select label {
+            margin-left: 4px;
+            font-weight: 400;
+        }
+
+        /* ----------  BOTONES  ---------------------------------- */
+        button {
+            cursor: pointer;
+            padding: 11px 26px;
+            border: none;
+            border-radius: 6px;
+            background: var(--clr-primary);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            transition: background .18s;
+        }
+
+        button:hover:not([disabled]) {
+            background: var(--clr-primary-dark);
+        }
+
+        button[disabled] {
+            background: #c8d4db;
+            cursor: not-allowed;
+        }
+
+        /* ----------  PANEL DE ESTADO  -------------------------- */
+        .status-panel {
+            margin-top: 22px;
+            background: #f0fbff;
+            border: 1px solid #c5e6f5;
+            border-radius: 8px;
+            padding: 20px 22px;
+            font-size: 15px;
+        }
+
+        .status-panel strong {
+            color: #2f4858;
+        }
+
+        #tiempo-restante {
+            font-weight: 700;
+            color: var(--clr-primary);
+        }
+
+        /* Barra de progreso (HTML5 <progress>) */
+        #progress {
+            width: 100%;
+            height: 10px;
+            margin: 14px 0 6px;
+            appearance: none;
+        }
+
+        #progress::-webkit-progress-bar {
+            background: #e6f5f7;
+            border-radius: 5px;
+        }
+
+        #progress::-webkit-progress-value {
+            background: var(--clr-primary);
+            border-radius: 5px;
+        }
+
+        #progress::-moz-progress-bar {
+            background: var(--clr-primary);
+            border-radius: 5px;
+        }
+
+        #resultado {
+            color: #27ae60;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+
+        #mensajes {
+            color: #e25e5e;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <h2>Centrífuga Automatizada – Panel de Control</h2>
+
+        <div class="flex">
+            <!-- VIDEO --------------------------------------------------- -->
+            <div id="video">
+                <img src="{{ stream_url }}" alt="Video en vivo">
+                <div class="caption">Video en Vivo</div>
+            </div>
+
+            <!-- CONFIGURACIÓN ------------------------------------------- -->
+            <div id="config">
+                <form id="form-datos" onsubmit="return false;">
+                    <label>Selecciona tubos (1 – 6):</label>
+                    <div id="tubo-select">
+                        {% for i in range(6) %}
+                        <div>
+                            <input type="checkbox" id="tubo{{i}}" {% if status.tubos[i] %}checked{% endif %}>
+                            <label for="tubo{{i}}">{{ i+1 }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <label for="veloc">Velocidad (RPM)</label>
+                    <input type="number" id="veloc" min="500" max="6000" value="{{ status.velocidad }}">
+
+                    <label for="tiemp">Tiempo (segundos)</label>
+                    <input type="number" id="tiemp" min="10" max="3600" value="{{ status.tiempo }}">
+
+                    <button type="button" onclick="actualizarConfig()">Guardar configuración</button>
+                </form>
+
+                <div id="resultado"></div>
+
+                <!-- PANEL ESTADO ------------------------------------- -->
+                <div class="status-panel">
+                    <strong>Estado:</strong>
+                    <span id="estado-running">
+                        {% if status.running %}
+                        <span style="color:#32b108;">Procesando</span>
+                        {% else %}
+                        <span style="color:#e25e5e;">Listo</span>
+                        {% endif %}
+                    </span><br>
+
+                    <strong>Tiempo restante:</strong> <span id="tiempo-restante">--</span><br>
+
+                    <!-- Nueva barra de progreso -->
+                    <progress id="progress" max="{{ status.tiempo }}" value="0"></progress>
+
+                    <strong>Acción:</strong> <span id="accion-actual">Esperando configuración...</span><br><br>
+
+                    <button id="btn-iniciar" onclick="iniciarProceso()" {% if status.running %}disabled{% endif
+                        %}>Iniciar proceso</button>
+                    <button id="btn-detener" onclick="detenerProceso()" {% if not status.running %}disabled{% endif
+                        %}>Detener</button>
+                </div>
+
+                <div id="mensajes"></div>
+            </div><!-- /config -->
+        </div><!-- /flex -->
+
+        <small style="display:block;text-align:center;margin-top:30px;color:#687883">
+            Desarrollado por <a href="https://horizonlabs.ai" target="_blank">Horizon Labs</a>
+        </small>
+    </div><!-- /container -->
+
+    <!-- ===================  MISMO JAVASCRIPT (sólo añado la barra)  =============== -->
+    <script>
+        var tiempoRestante = 0;
+        var procesoCorriendo = {{ "true" if status.running else "false" }};
+        var tiempoConfig = {{ status.tiempo }};
+        var progressBar = null;
+
+        function actualizarBarra() {
+            if (!progressBar) progressBar = document.getElementById('progress');
+            progressBar.max = tiempoConfig;
+            progressBar.value = tiempoConfig - tiempoRestante;
+        }
+
+        function actualizarConfig() {
+            let tbs = [];
+            for (let i = 0; i < 6; i++) tbs.push(document.getElementById("tubo" + i).checked ? 1 : 0);
+            let veloc = Number(document.getElementById("veloc").value);
+            let tiemp = Number(document.getElementById("tiemp").value);
+
+            fetch('/api/update', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tubos: tbs, velocidad: veloc, tiempo: tiemp })
+            }).then(r => r.json()).then(() => {
+                document.getElementById("resultado").innerText = 'Configuración guardada ✅';
+                tiempoConfig = tiemp;
+                actualizarBarra();
+                setTimeout(() => { document.getElementById("resultado").innerText = ''; }, 1800);
+            });
+        }
+
+        function iniciarProceso() {
+            document.getElementById("btn-iniciar").disabled = true;
+            fetch('/api/start', { method: 'POST' })
+                .then(r => r.json()).then(() => {
+                    document.getElementById("estado-running").innerHTML = '<span style="color:#32b108;">Procesando</span>';
+                    procesoCorriendo = true;
+                    tiempoRestante = tiempoConfig;
+                    document.getElementById("mensajes").innerText = "¡Proceso iniciado!";
+                    actualizarBarra();
+                    recalcTiempo();
+                });
+        }
+
+        function detenerProceso() {
+            document.getElementById("btn-detener").disabled = true;
+            fetch('/api/stop', { method: 'POST' }).then(r => r.json()).then(() => {
+                document.getElementById("estado-running").innerHTML = '<span style="color:#e25e5e;">Listo</span>';
+                procesoCorriendo = false;
+                document.getElementById("mensajes").innerText = "Proceso detenido.";
+                document.getElementById("tiempo-restante").innerText = "--";
+                actualizarBarra();
+            });
+        }
+
+        function recalcTiempo() {
+            if (!procesoCorriendo) return;
+            tiempoRestante--;
+            if (tiempoRestante < 0) tiempoRestante = 0;
+            document.getElementById("tiempo-restante").innerText = tiempoRestante + " s";
+            actualizarBarra();
+        }
+
+        function actualizarStatus() {
+            fetch('/api/status').then(r => r.json()).then(st => {
+                if (!procesoCorriendo && st.running) {
+                    procesoCorriendo = true;
+                    tiempoRestante = st.tiempo;
+                }
+                if (procesoCorriendo) {
+                    document.getElementById("btn-iniciar").disabled = true;
+                    document.getElementById("btn-detener").disabled = false;
+                    document.getElementById("estado-running").innerHTML = '<span style="color:#32b108;">Procesando</span>';
+                    document.getElementById("accion-actual").innerText = centriStatusMsg(st);
+                    if (tiempoRestante > 0) {
+                        document.getElementById("tiempo-restante").innerText = tiempoRestante + " s";
+                        tiempoRestante--;
+                        actualizarBarra();
+                    }
+                } else {
+                    document.getElementById("btn-iniciar").disabled = false;
+                    document.getElementById("btn-detener").disabled = true;
+                    document.getElementById("estado-running").innerHTML = '<span style="color:#e25e5e;">Listo</span>';
+                    document.getElementById("accion-actual").innerText = "Esperando configuración...";
+                    document.getElementById("tiempo-restante").innerText = "--";
+                }
+            });
+        }
+
+        function centriStatusMsg(st) {
+            if (!st.running) return "Esperando configuración...";
+            if (st.tiempo - tiempoRestante < 10) return "Preparando robot y balanceando";
+            if (tiempoRestante > 0.95 * st.tiempo) return "Arranque y aceleración de centrífuga";
+            if (tiempoRestante < 8) return "Frenando centrífuga y preparando descarga";
+            return "Centrifugando muestras (RPM: " + st.velocidad + ")";
+        }
+
+        window.onload = () => {
+            progressBar = document.getElementById('progress');
+            actualizarBarra();
+            setInterval(actualizarStatus, 1000);
+        };
+    </script>
+</body>
+
+</html>
