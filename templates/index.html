@@ -5,16 +5,11 @@
     <meta charset="utf-8">
     <title>Centrífuga Automatizada – Control y Estado</title>
 
-    <!-- Fuente limpia y ligera -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
-    <!-- (Mantengo tu /static/style.css por si tienes reglas propias) -->
     <link rel="stylesheet" href="/static/style.css">
-
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
     <style>
-        /* ----------  PALETA Y RESET BÁSICO  -------------------- */
         :root {
             --clr-primary: #006d77;
             --clr-primary-dark: #004e56;
@@ -36,7 +31,6 @@
             line-height: 1.45;
         }
 
-        /* ----------  CONTENEDOR PRINCIPAL  --------------------- */
         #container {
             max-width: 1100px;
             margin: 28px auto;
@@ -59,7 +53,6 @@
             margin-bottom: 26px;
         }
 
-        /* ----------  LAYOUT FLEX  ------------------------------ */
         .flex {
             display: flex;
             flex-wrap: wrap;
@@ -71,7 +64,6 @@
             flex: 1 1 360px;
         }
 
-        /* ----------  BLOQUE VIDEO  ----------------------------- */
         #video img {
             width: 100%;
             height: auto;
@@ -87,7 +79,6 @@
             margin-top: 6px;
         }
 
-        /* ----------  FORMULARIO  ------------------------------- */
         form label {
             display: block;
             font-weight: 600;
@@ -104,7 +95,6 @@
             margin-bottom: 18px;
         }
 
-        /* Grid para los 6 checkboxes de tubo */
         #tubo-select {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
@@ -117,7 +107,6 @@
             font-weight: 400;
         }
 
-        /* ----------  BOTONES  ---------------------------------- */
         button {
             cursor: pointer;
             padding: 11px 26px;
@@ -139,7 +128,6 @@
             cursor: not-allowed;
         }
 
-        /* ----------  PANEL DE ESTADO  -------------------------- */
         .status-panel {
             margin-top: 22px;
             background: #f0fbff;
@@ -158,7 +146,6 @@
             color: var(--clr-primary);
         }
 
-        /* Barra de progreso (HTML5 <progress>) */
         #progress {
             width: 100%;
             height: 10px;
@@ -199,13 +186,11 @@
         <h2>Centrífuga Automatizada – Panel de Control</h2>
 
         <div class="flex">
-            <!-- VIDEO --------------------------------------------------- -->
             <div id="video">
                 <img src="{{ stream_url }}" alt="Video en vivo">
                 <div class="caption">Video en Vivo</div>
             </div>
 
-            <!-- CONFIGURACIÓN ------------------------------------------- -->
             <div id="config">
                 <form id="form-datos" onsubmit="return false;">
                     <label>Selecciona tubos (1 – 6):</label>
@@ -229,7 +214,6 @@
 
                 <div id="resultado"></div>
 
-                <!-- PANEL ESTADO ------------------------------------- -->
                 <div class="status-panel">
                     <strong>Estado:</strong>
                     <span id="estado-running">
@@ -242,7 +226,6 @@
 
                     <strong>Tiempo restante:</strong> <span id="tiempo-restante">--</span><br>
 
-                    <!-- Nueva barra de progreso -->
                     <progress id="progress" max="{{ status.tiempo }}" value="0"></progress>
 
                     <strong>Acción:</strong> <span id="accion-actual">Esperando configuración...</span><br><br>
@@ -254,15 +237,14 @@
                 </div>
 
                 <div id="mensajes"></div>
-            </div><!-- /config -->
-        </div><!-- /flex -->
+            </div>
+        </div>
 
         <small style="display:block;text-align:center;margin-top:30px;color:#687883">
             Desarrollado por <a href="https://horizonlabs.ai" target="_blank">Horizon Labs</a>
         </small>
-    </div><!-- /container -->
+    </div>
 
-    <!-- ===================  MISMO JAVASCRIPT (sólo añado la barra)  =============== -->
     <script>
         var tiempoRestante = 0;
         var procesoCorriendo = {{ "true" if status.running else "false" }};
